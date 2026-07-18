@@ -2,7 +2,7 @@
 
 **An AI health companion that reads your real data and talks back — on web and iOS, from one backend.**
 
-Week 02 of the [52-App Challenge](https://github.com/Guywhocanbuild) — building 52 apps in 52 weeks to demonstrate full-stack + iOS engineering to founders and hiring teams.
+
 
 ![Node.js](https://img.shields.io/badge/Node.js-Express-339933?logo=node.js&logoColor=white)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white)
@@ -149,6 +149,5 @@ accompanying case study PDF contains a live credential.
 
 ## What's next
 
-Part of a 52-week build challenge. Next up: deployment (Railway), then Week 03.
 
 **Guy Who Can Build** — [github.com/Guywhocanbuild](https://github.com/Guywhocanbuild)
