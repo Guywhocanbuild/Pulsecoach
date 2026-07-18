@@ -3,6 +3,8 @@ const HealthLog = require("../models/HealthLog");
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
+console.log("Model:", process.env.GROQ_MODEL);
+
 const MODEL = "llama-3.3-70b-versatile"; // supports tool calling well on Groq
 
 const SYSTEM_PROMPT = `You are PulseCoach, a sharp, encouraging AI health companion.
