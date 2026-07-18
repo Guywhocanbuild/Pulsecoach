@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulseCoach — Your AI Health Companion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Ambient ECG signature line, fixed behind everything -->
+<svg class="ecg-bg" viewBox="0 0 1200 80" preserveAspectRatio="none" aria-hidden="true">
+  <path id="ecgPath" d="M0,40 L120,40 L145,40 L160,8 L175,72 L190,40 L220,40 L1200,40" />
+</svg>
+
+<!-- ============ AUTH SCREEN ============ -->
+<section id="authScreen" class="screen auth-screen">
+  <div class="auth-card">
+    <div class="brand">
+      <span class="brand-dot" aria-hidden="true"></span>
+      <span class="brand-word">PulseCoach</span>
+    </div>
+    <p class="auth-tagline">Your vitals, read in plain language.</p>
+
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab is-active" data-tab="login">Log in</button>
+      <button type="button" class="auth-tab" data-tab="register">Create account</button>
+    </div>
+
+    <form id="loginForm" class="auth-form">
+      <label>Email
+        <input type="email" name="email" required autocomplete="email" placeholder="you@example.com">
+      </label>
+      <label>Password
+        <input type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+      </label>
+      <button type="submit" class="btn btn-primary">Log in</button>
+      <p class="form-error" id="loginError"></p>
+      <p class="form-status" id="forgotStatus"></p>
+      <p class="auth-tagline auth-tagline--spaced">
+        <button type="button" id="forgotPasswordBtn" class="link-btn">Forgot password?</button>
+      </p>
+    </form>
+
+    <form id="registerForm" class="auth-form is-hidden">
+      <label>Name
+        <input type="text" name="name" required autocomplete="name" placeholder="Sajan">
+      </label>
+      <label>Email
+        <input type="email" name="email" required autocomplete="email" placeholder="you@example.com">
+      </label>
+      <label>Password
+        <input type="password" name="password" required minlength="6" autocomplete="new-password" placeholder="At least 6 characters">
+      </label>
+      <button type="submit" class="btn btn-primary">Create account</button>
+      <p class="form-error" id="registerError"></p>
+    </form>
+  </div>
+</section>
+
+<!-- ============ APP SHELL ============ -->
+<div id="appShell" class="app-shell is-hidden">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot" aria-hidden="true"></span>
+      <span class="brand-word">PulseCoach</span>
+    </div>
+
+    <nav class="tabnav" aria-label="Sections">
+      <button type="button" class="tabnav-btn is-active" data-view="dashboard">Dashboard</button>
+      <button type="button" class="tabnav-btn" data-view="chat">Coach</button>
+    </nav>
+
+    <div class="topbar-user">
+      <button type="button" id="goalsBtn" class="btn btn-ghost">🎯 Goals</button>
+      <button type="button" id="aboutBtn" class="btn btn-ghost">ⓘ About</button>
+      <span id="userName" class="user-name"></span>
+      <button type="button" id="logoutBtn" class="btn btn-ghost">Log out</button>
+    </div>
+  </header>
+
+  <!-- ============ DASHBOARD VIEW ============ -->
+  <section id="dashboardView" class="view" aria-label="Dashboard">
+
+    <div class="view-header">
+      <h1>Today's readout</h1>
+      <div class="view-actions">
+        <button type="button" id="demoDataBtn" class="btn btn-ghost">Load demo data</button>
+        <button type="button" id="shuffleDemoBtn" class="btn btn-ghost is-hidden">🔀 Shuffle</button>
+      </div>
+    </div>
+
+    <div id="emptyStateBanner" class="empty-state is-hidden">
+      <p class="empty-state-title">Let's go, champ 💪</p>
+      <p class="empty-state-subtitle">Add some data here — and in life too. Log something below, or load demo data to see your rings come alive.</p>
+      <button type="button" id="emptyStateDemoBtn" class="btn btn-primary empty-state-btn">Load demo data</button>
+    </div>
+
+    <section class="stat-grid" id="statGrid">
+      <article class="stat-card" data-metric="water">
+        <svg class="stat-ring" viewBox="0 0 120 120">
+          <circle class="ring-track" cx="60" cy="60" r="52"></circle>
+          <circle class="ring-value" cx="60" cy="60" r="52"></circle>
+        </svg>
+        <div class="stat-body">
+          <span class="stat-label">Water</span>
+          <span class="stat-number"><span id="waterValue">0</span><small>ml</small></span>
+          <span class="stat-goal">of <span id="waterGoal">2500</span>ml</span>
+        </div>
+      </article>
+
+      <article class="stat-card" data-metric="steps">
+        <svg class="stat-ring" viewBox="0 0 120 120">
+          <circle class="ring-track" cx="60" cy="60" r="52"></circle>
+          <circle class="ring-value" cx="60" cy="60" r="52"></circle>
+        </svg>
+        <div class="stat-body">
+          <span class="stat-label">Steps</span>
+          <span class="stat-number"><span id="stepsValue">0</span></span>
+          <span class="stat-goal">of <span id="stepsGoal">8000</span></span>
+        </div>
+      </article>
+
+      <article class="stat-card" data-metric="activeEnergy">
+        <svg class="stat-ring" viewBox="0 0 120 120">
+          <circle class="ring-track" cx="60" cy="60" r="52"></circle>
+          <circle class="ring-value" cx="60" cy="60" r="52"></circle>
+        </svg>
+        <div class="stat-body">
+          <span class="stat-label">Active energy</span>
+          <span class="stat-number"><span id="energyValue">0</span><small>kcal</small></span>
+          <span class="stat-goal">of <span id="energyGoal">600</span>kcal</span>
+        </div>
+      </article>
+
+      <article class="stat-card" data-metric="sleep">
+        <svg class="stat-ring" viewBox="0 0 120 120">
+          <circle class="ring-track" cx="60" cy="60" r="52"></circle>
+          <circle class="ring-value" cx="60" cy="60" r="52"></circle>
+        </svg>
+        <div class="stat-body">
+          <span class="stat-label">Sleep</span>
+          <span class="stat-number"><span id="sleepValue">0</span><small>hrs</small></span>
+          <span class="stat-goal">of <span id="sleepGoal">8</span>hrs</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel-row">
+      <div class="panel chart-panel">
+        <h2>This week</h2>
+        <canvas id="weeklyChart" height="220"></canvas>
+      </div>
+
+      <div class="panel entry-panel">
+        <h2>Log manually</h2>
+        <form id="manualLogForm" class="manual-form">
+          <label>Type
+            <select name="type" required>
+              <option value="water">Water (ml)</option>
+              <option value="steps">Steps (count)</option>
+              <option value="activeEnergy">Active energy (kcal)</option>
+              <option value="sleep">Sleep (hours)</option>
+            </select>
+          </label>
+          <label>Amount
+            <input type="number" name="value" step="any" min="0" required placeholder="e.g. 250">
+          </label>
+          <label>Date
+            <input type="date" name="loggedAt" required>
+          </label>
+          <button type="submit" class="btn btn-primary">Add entry</button>
+          <p class="form-status" id="manualLogStatus"></p>
+        </form>
+
+        <h2 class="entry-list-heading">Today's entries</h2>
+        <ul class="entry-list" id="entryList">
+          <li class="entry-list-empty">No entries yet today.</li>
+        </ul>
+      </div>
+    </section>
+  </section>
+
+  <!-- ============ CHAT VIEW ============ -->
+  <section id="chatView" class="view is-hidden" aria-label="Coach chat">
+    <div class="chat-shell">
+      <div class="chat-log" id="chatLog">
+        <div class="chat-bubble chat-bubble--coach">
+          <p>Hey — I can see your health data for today. Ask me anything, or just tell me what you did — "drank 400ml of water" — and I'll log it for you.</p>
+        </div>
+      </div>
+
+      <form id="chatForm" class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="Tell your coach something…" autocomplete="off" required>
+        <button type="submit" class="btn btn-primary">Send</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT MODAL ============ -->
+  <div id="aboutModal" class="modal-overlay is-hidden">
+    <div class="modal-card" role="dialog" aria-labelledby="aboutModalTitle" aria-modal="true">
+      <div class="modal-header">
+        <h2 id="aboutModalTitle">How PulseCoach works</h2>
+        <button type="button" id="closeAboutBtn" class="modal-close" aria-label="Close">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <section class="modal-section">
+          <h3>"Today's readout" vs. "This week"</h3>
+          <p>
+            The four rings at the top only count entries logged <strong>today</strong> —
+            they reset to 0 every midnight. The chart below them shows the last
+            <strong>7 days</strong>, so older entries stay visible there even after
+            today's rings have reset. Two different time windows, both correct at the same time.
+          </p>
+        </section>
+
+        <section class="modal-section">
+          <h3>Logging your data</h3>
+          <p>
+            Use the <strong>"Log manually"</strong> form to add an entry by hand, or just tell
+            your Coach what you did in plain language — <em>"I drank 300ml of water"</em> — and
+            it'll log it for you automatically. Vague messages like <em>"I drank some water"</em>
+            won't log anything; the coach will ask you for a number instead of guessing.
+          </p>
+        </section>
+
+        <section class="modal-section">
+          <h3>Today's entries list</h3>
+          <p>
+            Every entry you've logged today — manual or via chat — shows up in the list under
+            the manual entry form. Made a mistake? Click the <strong>✕</strong> next to any
+            entry to delete it; the rings and chart update immediately.
+          </p>
+        </section>
+
+        <section class="modal-section">
+          <h3>Demo data</h3>
+          <p>
+            "Load demo data" fills in a realistic 7-day history so you can see the app without
+            manually logging a week's worth of numbers. It's always the <strong>same numbers</strong>
+            by default; hit "🔀 Shuffle" if you want fresh random data instead. Your own manual
+            entries are never touched by this.
+          </p>
+        </section>
+
+        <section class="modal-section">
+          <h3>Email notifications</h3>
+          <p>
+            You'll get a welcome email on signup, a security alert on every login, and a reset
+            link if you use "Forgot password?". None of these are marketing emails.
+          </p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ GOALS MODAL ============ -->
+  <div id="goalsModal" class="modal-overlay is-hidden">
+    <div class="modal-card" role="dialog" aria-labelledby="goalsModalTitle" aria-modal="true">
+      <div class="modal-header">
+        <h2 id="goalsModalTitle">Your daily goals</h2>
+        <button type="button" id="closeGoalsBtn" class="modal-close" aria-label="Close">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-section-intro">
+          Set targets that fit you — the rings on your dashboard measure progress against these.
+        </p>
+
+        <form id="goalsForm" class="manual-form">
+          <label>Daily water (ml) <span class="field-hint">500–8000</span>
+            <input type="number" name="dailyWaterML" min="500" max="8000" step="50" required>
+          </label>
+          <label>Daily steps <span class="field-hint">1,000–50,000</span>
+            <input type="number" name="dailyStepGoal" min="1000" max="50000" step="500" required>
+          </label>
+          <label>Daily active energy (kcal) <span class="field-hint">100–5000</span>
+            <input type="number" name="dailyActiveEnergyGoal" min="100" max="5000" step="50" required>
+          </label>
+          <label>Daily sleep (hours) <span class="field-hint">3–14</span>
+            <input type="number" name="dailySleepHours" min="3" max="14" step="0.5" required>
+          </label>
+          <button type="submit" class="btn btn-primary">Save goals</button>
+          <p class="form-status" id="goalsStatus"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
